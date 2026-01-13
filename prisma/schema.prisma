@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users     User[]
+  shipments Shipment[]
+
+  @@map("organizations")
+}
+
+enum UserRole {
+  OWNER
+  STAFF
+}
+
+model User {
+  id             String   @id @default(uuid()) @db.Uuid
+  email          String   @unique
+  password       String
+  name           String
+  role           UserRole @default(OWNER)
+  organizationId String   @db.Uuid
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  shipments    Shipment[]    @relation("ShipmentCreatedBy")
+  proofVideos  ProofVideo[]  @relation("ProofVideoUploadedBy")
+
+  @@map("users")
+}
+
+model Shipment {
+  id             String         @id @default(uuid()) @db.Uuid
+  awb            String
+  status         ShipmentStatus @default(CREATED)
+  organizationId String         @db.Uuid
+  createdById    String         @db.Uuid
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User         @relation("ShipmentCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+  proofVideo   ProofVideo?
+
+  @@unique([awb, organizationId])
+  @@map("shipments")
+}
+
+enum ShipmentStatus {
+  CREATED
+  RECORDING
+  PROCESSING
+  SEALED
+  FAILED
+}
+
+model ProofVideo {
+  id           String   @id @default(uuid()) @db.Uuid
+  shipmentId   String   @unique @db.Uuid
+  videoUrl     String
+  uploadedById String   @db.Uuid
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  shipment   Shipment    @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  uploadedBy User        @relation("ProofVideoUploadedBy", fields: [uploadedById], references: [id], onDelete: Restrict)
+  shareLinks ShareLink[]
+
+  @@map("proof_videos")
+}
+
+model ShareLink {
+  id           String   @id @default(uuid()) @db.Uuid
+  token        String   @unique
+  proofVideoId String   @db.Uuid
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  proofVideo ProofVideo @relation(fields: [proofVideoId], references: [id], onDelete: Cascade)
+
+  @@map("share_links")
+}
