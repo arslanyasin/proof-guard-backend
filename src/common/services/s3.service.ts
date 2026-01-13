@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class S3Service {
@@ -40,7 +40,7 @@ export class S3Service {
     try {
       // Generate unique filename with original extension
       const fileExtension = file.originalname.split('.').pop();
-      const fileName = `${folder}/${uuidv4()}.${fileExtension}`;
+      const fileName = `${folder}/${randomUUID()}.${fileExtension}`;
 
       const command = new PutObjectCommand({
         Bucket: this.bucketName,
