@@ -155,6 +155,7 @@ pipeline {
                 script {
                     echo "🏗️ Building NestJS application..."
                     try {
+                        sh 'npx prisma generate'
                         sh 'npm run build'
                     } catch (Exception e) {
                         echo "❌ Application build failed: ${e.getMessage()}"
