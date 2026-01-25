@@ -2,22 +2,21 @@
 # Proxy Server Backend - Dockerfile
 # ========================================
 # Optimized for Jenkins CI/CD builds
-
-FROM node:21.4.0-alpine
+FROM node:21.4.0-slim
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001
+RUN groupadd --gid 1001 nodejs && \
+    useradd --uid 1001 --gid nodejs --shell /bin/bash --create-home nestjs
 
 # Set working directory
 WORKDIR /app
 
 # Install dumb-init for proper signal handling and PDF processing dependencies
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     dumb-init \
     graphicsmagick \
     ghostscript \
-    ghostscript-fonts
+    && rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories including temp directory for PDF processing
 RUN mkdir -p /app/logs /app/tmp && \
@@ -32,6 +31,8 @@ ENV TMPDIR=/app/tmp
 COPY --chown=nestjs:nodejs dist/ ./dist/
 COPY --chown=nestjs:nodejs node_modules/ ./node_modules/
 COPY --chown=nestjs:nodejs package*.json ./
+
+# Copy the generated Prisma client
 COPY --chown=nestjs:nodejs generated/ ./generated/
 
 # Copy scripts and configuration files
@@ -44,4 +45,4 @@ USER nestjs
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["node", "dist/main"] 
+CMD ["node", "dist/main"]
