@@ -32,6 +32,7 @@ ENV TMPDIR=/app/tmp
 COPY --chown=nestjs:nodejs dist/ ./dist/
 COPY --chown=nestjs:nodejs node_modules/ ./node_modules/
 COPY --chown=nestjs:nodejs package*.json ./
+COPY --chown=nestjs:nodejs generated/ ./generated/
 
 # Copy scripts and configuration files
 COPY --chown=nestjs:nodejs nest-cli.json ./
