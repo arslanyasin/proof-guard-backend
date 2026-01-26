@@ -9,7 +9,6 @@ import {
   UseInterceptors,
   UploadedFile,
   ParseFilePipe,
-  MaxFileSizeValidator,
   FileTypeValidator,
   BadRequestException,
 } from '@nestjs/common';
@@ -57,15 +56,11 @@ export class VideosController {
   @ApiResponse({ status: 400, description: 'Invalid file type, or shipment already sealed/failed' })
   @ApiResponse({ status: 404, description: 'Shipment not found' })
   @ApiResponse({ status: 409, description: 'Video already exists for this shipment' })
-  @ApiResponse({ status: 413, description: 'File too large' })
   async upload(
     @Body() uploadVideoDto: UploadVideoDto,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({
-            maxSize: parseInt(process.env.MAX_FILE_SIZE || '104857600'), // Default 100MB
-          }),
           new FileTypeValidator({
             fileType: /(mp4|mov|avi|mkv|webm)$/,
           }),
